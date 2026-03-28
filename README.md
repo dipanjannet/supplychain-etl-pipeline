@@ -34,3 +34,13 @@ CREATE TABLE WatermarkControl (
     TableName       NVARCHAR(100) PRIMARY KEY,
     WatermarkValue  DATETIME2(7) NULL
 );
+
+### 4. Visual Flow Summary
+Trigger (Event or Schedule)
+        ↓
+Lookup_ActiveConfigs   ← Reads all active sources from config table
+        ↓
+ForEach_Sources (loops over each source)
+   ├── Copy_Activity_Generic   ← Dynamic source + dynamic sink based on @item()
+   │        (CSV / REST / SQL logic handled via expressions)
+   └── Update_Watermark (if Copy succeeds)   ← Only meaningful for SQL
