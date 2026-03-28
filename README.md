@@ -21,6 +21,7 @@ ForEach → Processes each config row
 If Conditions → Routes to appropriate Copy activity based on SourceType
 Bronze Layer → Writes Parquet files with proper partitioning
 
+```sql
 Folder Structure
 Bashscm-datalake/
 ├── ingestion/
