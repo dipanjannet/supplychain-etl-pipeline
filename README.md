@@ -46,7 +46,7 @@ If Conditions route to the appropriate Copy activity
 Data lands in Bronze layer with proper partitioning
 
 ### Folder Structure
-
+```
 ccm-datalake/
 ├── ingestion/                      # Landing / Raw zone
 │   ├── sap/
@@ -64,10 +64,10 @@ ccm-datalake/
     │   └── customer/
     └── rest_api/
         └── product/
-
+```
 
 Configuration Table
-
+```
 CREATE TABLE dbo.IngestionConfig (
     ConfigId            INT IDENTITY(1,1) PRIMARY KEY,
     SourceSystem        VARCHAR(50)  NOT NULL,     -- 'sap', 'azure_sql', 'rest_api'
@@ -86,9 +86,10 @@ CREATE TABLE dbo.IngestionConfig (
     CreatedDate         DATETIME2 DEFAULT GETUTCDATE(),
     UpdatedDate         DATETIME2 DEFAULT GETUTCDATE()
 );
+```
 
 Sample Data
-
+```
 -- SAP Sales CSV
 INSERT INTO dbo.IngestionConfig (SourceSystem, TableName, SourceType, LinkedServiceName, SourceDatasetName)
 VALUES ('sap', 'sales', 'CSV', 'ls_ADLS_Landing', 'ds_Generic_CSV');
@@ -99,6 +100,7 @@ INSERT INTO dbo.IngestionConfig (SourceSystem, TableName, SourceType, LinkedServ
 VALUES ('azure_sql', 'customer', 'AZURE_SQL', 'ls_AzureSQL_Source', 'ds_Generic_AzureSQL', 
         '{"tableName":"dbo.Customer"}', 'last_modified');
 
+```
 
 Pipeline Design (pl_Generic_Ingestion)
 
