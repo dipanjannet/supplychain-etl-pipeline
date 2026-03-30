@@ -35,7 +35,7 @@ flowchart TD
     G --> I
     H --> I
     I --> J[Update Watermark - Stored Procedure]
-
+```
 
 ### High-Level Flow:
 
