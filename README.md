@@ -52,6 +52,9 @@ flowchart TD
     G --> I
     H --> I
     I --> J[Update Watermark - Stored Procedure]
+
+    style A fill:#007bff
+    style I fill:#28a745
 ```
 
 ---
