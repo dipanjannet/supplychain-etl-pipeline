@@ -202,12 +202,115 @@ flowchart TD
 - Easy onboarding: insert one row to add a new table
 - Clear separation of concerns (Ingestion vs. Transformation)
 
-**Industry Best Practices**
+**Best Practices**
 - Metadata-driven architecture for flexibility and governance
 - Incremental load patterns to optimize performance and costs
 - Watermark-based change tracking for reliable incremental processing
 - Full audit trails and history tracking in Silver layer
 - Parquet format for optimal compression and query performance
+
+---
+
+## Data Model: Star Schema Design
+
+The Silver layer uses a **star schema** optimized for analytics and reporting, with natural keys and proper dimension handling.
+
+### Star Schema ERD (Entity-Relationship Diagram)
+
+```mermaid
+erDiagram
+    DIMDATE ||--o{ FACTSALES : "calendar_date"
+    DIMCUSTOMER ||--o{ FACTSALES : "customer_id"
+    DIMPRODUCT ||--o{ FACTSALES : "product_id"
+
+    FACTSALES {
+        string sales_id PK "Natural Key"
+        date order_date FK,PK "Natural Key"
+        string customer_id FK,PK "Natural Key"
+        string product_id FK,PK "Natural Key"
+        string source_system PK "Natural Key"
+        int quantity "Measure"
+        decimal net_amount "Measure"
+        string currency
+        date load_date
+    }
+
+    DIMDATE {
+        int date_sk PK "Format: YYYYMMDD"
+        date calendar_date "Natural Key, Unique"
+        int year
+        int quarter
+        int month
+        int day
+        int day_of_week
+        int week_of_year
+        string year_month
+        string day_name
+        string month_name
+        bit is_weekend
+        bit is_holiday
+    }
+
+    DIMCUSTOMER {
+        string customer_id PK "Natural Key"
+        string customer_name
+        string region
+        string channel
+        datetime2 last_modified
+        datetime2 load_date
+    }
+
+    DIMPRODUCT {
+        int product_id PK "Natural Key"
+        int version PK "SCD Type 2"
+        string title
+        string slug
+        decimal price
+        string description
+        int category_id
+        string category_name
+        string category_slug
+        string category_image
+        string images "JSON or separate table"
+        datetime2 effective_date "SCD Type 2"
+        datetime2 end_date "SCD Type 2"
+        bit is_current "SCD Type 2"
+        datetime2 creation_at
+        datetime2 updated_at
+        datetime2 load_date
+    }
+```
+
+### ERD Summary
+
+**Central Fact Table:**
+- **FactSales** — Central hub storing all transactions with foreign keys to three dimensions
+  - Grain: One row per sales transaction
+  - Primary Key: (sales_id, order_date, customer_id, product_id, source_system)
+  - Measures: quantity, net_amount
+
+**Dimension Tables:**
+
+1. **DimDate** — Time dimension (1:Many relationship with FactSales)
+   - Supports time-based analytics (by year, quarter, month, week, day)
+   - Includes business day flags and holiday indicators
+   - Conformed dimension for consistent date handling
+
+2. **DimCustomer** — Customer dimension with SCD Type 1 (overwrite on changes)
+   - Natural Key: customer_id
+   - Attributes: customer_name, region, channel
+   - SCD Type 1: Updates are made in-place (no version history)
+
+3. **DimProduct** — Product dimension with SCD Type 2 (version history tracking)
+   - Composite Primary Key: (product_id, version)
+   - Captures product schema from REST API (title, slug, price, category, images)
+   - SCD Type 2: Maintains full version history with effective_date and end_date
+   - Tracks status changes and product updates over time
+
+**Relationships:**
+- One Date → Many Sales transactions
+- One Customer → Many Sales transactions
+- One Product → Many Sales transactions
 
 ---
 
