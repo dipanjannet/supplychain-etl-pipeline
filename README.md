@@ -35,40 +35,19 @@ Instead of building separate pipelines for each source and transformation, we us
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     DATA SOURCES                                 │
-│          (CSV, Azure SQL, REST API)                              │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-        ┌──────────────────▼──────────────────┐
-        │   PART 1: INGESTION (ADF)           │
-        │   ✓ Event-driven CSV trigger        │
-        │   ✓ Config-based multi-source       │
-        │   ✓ Full + Incremental Load         │
-        └──────────────────┬──────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │ Bronze Layer │
-                    │  (Storage)   │
-                    └──────┬───────┘
-                           │
-        ┌──────────────────▼──────────────────┐
-        │  PART 2: TRANSFORMATION              │
-        │        (Databricks)                  │
-        │   ✓ Config-driven pipeline           │
-        │   ✓ Full + Incremental Load          │
-        │   ✓ History tracking (Silver)        │
-        └──────────────────┬──────────────────┘
-                           │
-            ┌──────────────▼───────────────┐
-            │      Silver Layer            │
-            │   (Processing / History)     │
-            │                              │
-            │ • scmdatalake_silver_sap     │
-            │ • scmdatalake_silver_rest_api│
-            │ • scmdatalake_silver_azure_sql
-            └──────────────────────────────┘
+```mermaid
+flowchart TD
+    A[Blob Storage Event Trigger] --> B[pl_Generic_Ingestion Pipeline]
+    B --> C[Lookup_ActiveConfigs]
+    C --> D[ForEach - Config Rows]
+    D --> E{SourceType?}
+    E -->|CSV| F[Copy Activity - CSV to Parquet]
+    E -->|AZURE_SQL| G[Copy Activity - Incremental/Full Load]
+    E -->|REST_API| H[Copy Activity - REST API]
+    F --> I[Bronze Layer Parquet]
+    G --> I
+    H --> I
+    I --> J[Update Watermark - Stored Procedure]
 ```
 
 ---
