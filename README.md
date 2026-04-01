@@ -15,30 +15,6 @@ This solution implements a **two-stage metadata-driven pipeline** for CCBJI's su
 
 Instead of building separate pipelines for each source and transformation, we use **generic, config-driven pipelines** that read configurations from SQL tables and dynamically process unlimited sources and transformations—eliminating technical debt and enabling rapid scaling.
 
-### Architecture Principles
-
-**Medallion Architecture**
-- **Bronze Layer** — Raw data ingestion with no transformations (immutable source of truth)
-- **Silver Layer** — Data quality, deduplication, and history tracking
-- **Gold Layer** — Business-ready aggregated data for analytics and reporting
-
-**Scalability**
-- Config-table-driven design enables horizontal scaling—add new sources/tables without code changes
-- Generic pipelines handle unlimited data sources and volumes
-- Event-driven triggers for near-real-time processing
-
-**Maintainability**
-- **Single source of truth** via IngestionConfig table
-- No technical debt from pipeline duplication
-- Easy onboarding: insert one row to add a new table
-- Clear separation of concerns (Ingestion vs. Transformation)
-
-**Industry Best Practices**
-- Metadata-driven architecture for flexibility and governance
-- Incremental load patterns to optimize performance and costs
-- Watermark-based change tracking for reliable incremental processing
-- Full audit trails and history tracking in Silver layer
-- Parquet format for optimal compression and query performance
 
 ### Key Features
 
@@ -198,32 +174,30 @@ Once data lands in the Bronze layer, Databricks processes it into the Silver lay
 
 ---
 
-## Best Practices & Architecture Benefits
+### Architecture Principles
 
-### Medallion Architecture Compliance
-✓ **Bronze** — Immutable raw data storage (no transformations, no deletions)  
-✓ **Silver** — Cleansed, deduplicated, conformed data with full audit trail  
-✓ **Gold** — Business-ready aggregated datasets for analytics  
+**Medallion Architecture**
+- **Bronze Layer** — Raw data ingestion with no transformations (immutable source of truth)
+- **Silver Layer** — Data quality, deduplication, and history tracking
+- **Gold Layer** — Business-ready aggregated data for analytics and reporting
 
-### Scalability Advantages
-✓ Add unlimited sources, tables, and transformations via configuration (no code)  
-✓ Horizontal scaling — same pipelines handle 10x, 100x data volume growth  
-✓ Event-driven triggers adapt automatically to data velocity  
-✓ Cost-efficient incremental loads reduce unnecessary data movement  
+**Scalability**
+- Config-table-driven design enables horizontal scaling—add new sources/tables without code changes
+- Generic pipelines handle unlimited data sources and volumes
+- Event-driven triggers for near-real-time processing
 
-### Maintainability & Governance
-✓ Single source of truth (IngestionConfig table)  
-✓ No pipeline duplication = no technical debt  
-✓ Clear audit trails for compliance and data lineage  
-✓ Rapid onboarding: 1 SQL row = new data source  
-✓ Built-in error handling via Stored Procedures and Databricks workflows  
+**Maintainability**
+- **Single source of truth** via IngestionConfig table
+- No technical debt from pipeline duplication
+- Easy onboarding: insert one row to add a new table
+- Clear separation of concerns (Ingestion vs. Transformation)
 
-### Industry Best Practices
-✓ Metadata-driven architecture
-✓ Watermark-based incremental processing (reduces cost and latency)  
-✓ Parquet + Delta format for optimal compression and query performance  
-✓ Configuration-as-code principles enable version control and auditing  
-✓ Separation of concerns (Ingestion ≠ Transformation)  
+**Industry Best Practices**
+- Metadata-driven architecture for flexibility and governance
+- Incremental load patterns to optimize performance and costs
+- Watermark-based change tracking for reliable incremental processing
+- Full audit trails and history tracking in Silver layer
+- Parquet format for optimal compression and query performance
 
 ---
 
