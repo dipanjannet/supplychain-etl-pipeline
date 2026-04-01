@@ -39,11 +39,11 @@ flowchart TD
 
 ### High-Level Flow:
 
-Event Trigger fires when a new CSV file lands
-Lookup reads active configurations from SQL table
-ForEach processes each config row
-If Conditions route to the appropriate Copy activity
-Data lands in Bronze layer with proper partitioning
+- Event Trigger fires when a new CSV file lands
+- Lookup reads active configurations from SQL table
+- ForEach processes each config row
+- If Conditions route to the appropriate Copy activity
+- Data lands in Bronze layer with proper partitioning
 
 ### Folder Structure
 ```
@@ -90,15 +90,11 @@ CREATE TABLE dbo.IngestionConfig (
 
 Sample Data
 ```
--- SAP Sales CSV
-INSERT INTO dbo.IngestionConfig (SourceSystem, TableName, SourceType, LinkedServiceName, SourceDatasetName)
-VALUES ('sap', 'sales', 'CSV', 'ls_ADLS_Landing', 'ds_Generic_CSV');
-
--- Customer from Azure SQL (Incremental)
-INSERT INTO dbo.IngestionConfig (SourceSystem, TableName, SourceType, LinkedServiceName, SourceDatasetName, 
-                                 SourceParams, WatermarkColumn)
-VALUES ('azure_sql', 'customer', 'AZURE_SQL', 'ls_AzureSQL_Source', 'ds_Generic_AzureSQL', 
-        '{"tableName":"dbo.Customer"}', 'last_modified');
+ConfigId|SourceSystem|TableName|SourceType|IsActive|LinkedServiceName |SourceDatasetName  |SourceParams                |WatermarkColumn|WatermarkValue         |LastProcessedDate|CreatedDate            |UpdatedDate            |
+--------+------------+---------+----------+--------+------------------+-------------------+----------------------------+---------------+-----------------------+-----------------+-----------------------+-----------------------+
+       1|sap         |sales    |CSV       |       1|ls_ADLS_Landing   |ds_Generic_CSV     |{}                          |               |                       |                 |2026-03-28 12:39:06.240|2026-03-28 12:39:06.240|
+       2|azure_sql   |customer |AZURE_SQL |       1|ls_AzureSQL_Source|ds_Generic_AzureSQL|{"tableName":"dbo.Customer"}|last_modified  |2026-03-26 22:12:59.000|       2026-03-31|2026-03-28 12:39:06.250|2026-03-31 17:46:43.786|
+       3|rest_api    |product  |REST_API  |       1|ls_HTTP_ProductAPI|ds_Generic_HTTP    |{"relativeUrl":"/products"} |               |                       |                 |2026-03-28 12:39:06.253|2026-03-28 12:39:06.253|
 
 ```
 
@@ -106,11 +102,29 @@ Pipeline Design (pl_Generic_Ingestion)
 
 The pipeline consists of:
 
-Lookup → Reads active configurations
-ForEach → Loops through each config
-If Condition → Routes based on SourceType (more stable than Switch)
-Copy Activity → Performs actual data movement
-Stored Procedure → Updates watermark for SQL sources
+- Lookup → Reads active configurations
+- ForEach → Loops through each config
+- If Condition → Routes based on SourceType
+- Copy Activity → Performs actual data movement
+- Stored Procedure → Updates watermark for SQL sources
+
+## Databricks Transformation and Silver Layer
+
+Once data lands in the storage/bronze layer from ADF, an Azure Databricks config-driven transformation pipeline processes it into the Silver layer.
+
+- Configuration-based pipeline in Databricks
+- First run loads data as a full load
+- Subsequent runs perform incremental loads
+- Silver layer maintains processing history
+
+Silver schemas:
+- `scmdatalake_silver_sap`
+- `scmdatalake_silver_rest_api`
+- `scmdatalake_silver_azure_sql`
+
+Azure Workflows for Silver load:
+- `azure_sql_silver_data_load_wf`
+- `sap_silver_data_load_wf`
 
 Setup Instructions
 
