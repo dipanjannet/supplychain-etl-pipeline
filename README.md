@@ -6,9 +6,13 @@
 
 A **highly scalable, maintainable, and enterprise-grade** ETL framework that ingests from multiple sources into Bronze (storage), then transforms into Silver (processing) using Databricks. Built on proven industry best practices and medallion architecture principles.
 
+## High-Level Architecture
+
+![Supply Chain ETL Architecture](SCM_ETL_FINAL.jpg)
+
 ## Project Overview
 
-This solution implements a **two-stage metadata-driven pipeline** for CCBJI's supply chain analytics platform:
+This solution implements a **two-stage metadata-driven pipeline** for a supply chain analytics platform:
 
 1. **INGESTION (ADF)** — Multi-source data collection into Bronze layer
 2. **TRANSFORMATION (Databricks)** — Config-driven data processing into Silver layer and Gold Layer
@@ -33,7 +37,7 @@ Instead of building separate pipelines for each source and transformation, we us
 - **Silver Layer History** — Maintains processing history and transformations
 - **Multi-Source Schemas** — SAP, REST API, and Azure SQL transformations
 
-## High-Level Architecture
+## ADF LLD Flow Diagram
 
 ```mermaid
 flowchart TD
@@ -130,6 +134,7 @@ That's it. The `pl_Generic_Ingestion` pipeline automatically picks up this new c
 
 ## PART 2: TRANSFORMATION (Azure Databricks)
 
+
 Once data lands in the Bronze layer, Databricks processes it into the Silver layer for analytics—following medallion architecture principles.
 
 ### Transformation Pipeline Behavior
@@ -145,6 +150,29 @@ Once data lands in the Bronze layer, Databricks processes it into the Silver lay
 - `scmdatalake_silver_sap` — SAP data transformations with quality rules and history
 - `scmdatalake_silver_rest_api` — REST API data transformations with quality rules and history
 - `scmdatalake_silver_azure_sql` — Azure SQL data transformations with quality rules and history
+
+### Databricks Transformation Flow Diagram
+
+```mermaid
+flowchart TD
+    A[Silver Layer JOB Triggered] --> B[Config-Driven Workflow]
+    B --> C[Single Databricks Notebook]
+    C --> D[Read Configuration]
+    D --> E{First Load or Incremental?}
+    
+    E -->|First Load| F[Query All Data from Bronze Layer]
+    E -->|Incremental Load| G[Query Delta Data from Bronze Layer]
+    
+    F --> H[Apply Transformations<br/>Data Quality Rules<br/>Deduplication]
+    G --> H
+    
+    H --> I[Write to Silver Layer<br/>Processing Schemas]
+    I --> J[Maintain History<br/>Audit Trail]
+    J --> K[Silver Layer Ready<br/>for Analytics]
+    
+    style A fill:#007bff
+    style K fill:#28a745
+```
 
 ### Azure Workflows for Silver Load
 
